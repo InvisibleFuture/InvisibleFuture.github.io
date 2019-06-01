@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Team</title>
+<p>项目组数据如何存储是前端无需关心的</p>
+
+灵感池 自由市场的想法创意 关注或参与的项 组的项 会的项
+<div id="app">
+    集市 项 直接list即可
+    <ul class="source">
+        <li>源 灵感</li>
+    </ul>
+    <ul class="idea">
+        <li>集市 想法</li>
+    </ul>
+    <ul class="guild">
+        <li>会</li>
+    </ul>
+    <ul class="team">
+        <li>组</li>
+    </ul>
+    <ul class="user">
+        <li v-for="user in users" v-text="user.name">个体</li>
+    </ul>
+
+
+    私有 列
+    <ul>
+        <li>源 集合</li>
+    </ul>
+    <ul>
+        <li>项 集合</li>
+    </ul>
+    <ul>
+        <li>组 交互</li>
+    </ul>
+    <ul>
+        <li>个体 交互</li>
+    </ul>
+
+    技术攻关
+</div>
+<!-- 生产环境版本，优化了尺寸和速度 -->
+<script src="https://cdn.jsdelivr.net/npm/vue"></script>
+<script>
+    var app = new Vue({
+        el: '#app',
+        data: {
+            msg: "you will",
+            users: [
+                { id: '123', name: "kill", email: "exp@max.exp" }
+            ]
+        }
+    })
+</script>
