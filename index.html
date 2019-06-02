@@ -1,54 +1,77 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <title>Team</title>
-<p>项目组数据如何存储是前端无需关心的</p>
 
-灵感池 自由市场的想法创意 关注或参与的项 组的项 会的项
 <div id="app">
-    集市 项 直接list即可
-    <ul class="source">
-        <li>源 灵感</li>
-    </ul>
-    <ul class="idea">
-        <li>集市 想法</li>
-    </ul>
-    <ul class="guild">
-        <li>会</li>
-    </ul>
-    <ul class="team">
-        <li>组</li>
-    </ul>
-    <ul class="user">
-        <li v-for="user in users" v-text="user.name">个体</li>
-    </ul>
-
-
-    私有 列
-    <ul>
-        <li>源 集合</li>
-    </ul>
-    <ul>
-        <li>项 集合</li>
-    </ul>
-    <ul>
-        <li>组 交互</li>
-    </ul>
-    <ul>
-        <li>个体 交互</li>
-    </ul>
-
-    技术攻关
+	<router-link to="/private">private</router-link>
+	<router-link to="/foo">Go to Foo</router-link>
+	<router-link to="/bar">Go to Bar</router-link>
+	<!-- 路由匹配到的组件将渲染在这里 -->
+	<router-view></router-view>
+	<!-- 技术攻关 进度 -->
 </div>
-<!-- 生产环境版本，优化了尺寸和速度 -->
+
 <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+<script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
 <script>
-    var app = new Vue({
-        el: '#app',
-        data: {
-            msg: "you will",
-            users: [
-                { id: '123', name: "kill", email: "exp@max.exp" }
-            ]
-        }
-    })
+	Vue.component('sources', {
+		template: `<ul class="source"><li v-for="source in sources"><span v-text="source.name"></span></li></ul>`,
+		data: function () { return { sources: [{ id: '323', name: 'asyam', detail: 'ams' }] } }
+	})
+	Vue.component('ideas', {
+		template: `<ul class="idea"><li v-for="idea in ideas"><span v-text="idea.name"></span></li></ul>`,
+		data: function () { return { ideas: [{ id: '323', name: '自动化', detail: 'ams' }, { id: '323', name: '数控车床', detail: 'ams' }, { id: '323', name: '弹夹', detail: 'ams' }] } }
+	})
+	Vue.component('users', {
+		template: `<ul class="users"><li v-for="user in users"><span v-text="user.name"></span><span v-text="user.email"></span><span v-text="user.coordinate"></span></li></ul>`,
+		data: function () { return { users: [{ id: '123', name: 'Last', email: 'Last@max.exp', coordinate: '奧林帕斯山' }] } }
+	})
+	Vue.component('guilds', {
+		template: `<ul class="guilds"><li v-for="item in list"><router-link :to="'p'+item.id"><span v-text="item.name"></span></router-link></li></ul>`,
+		data: function () { return { list: [{ id: '122', name: '项目组' }] } }
+	})
+	Vue.component('projects', {
+		template: `<ul class="projects"><li v-for="item in list"><router-link :to="'p'+item.id"><span v-text="item.name"></span></router-link></li></ul>`,
+		data: function () { return { list: [{ id: '122', name: '项目组' }] } }
+	})
+	Vue.component('tasks', {
+		template: `<ul class="tasks"><li v-for="item in list"><span v-text="item.name"></span></li></ul>`,
+		data: function () { return { list: [{ id: '122', name: 'task' }] } }
+	})
+	Vue.component('issues', {
+		template: `<ul class="issues"><li v-for="item in list"><span v-text="item.name"></span></li></ul>`,
+		data: function () { return { list: [{ id: '122', name: 'issue' }] } }
+	})
+
+	const Home = { template: '<main><sources/><ideas/><users/><projects/></main>' }
+	const Idea = { template: '<main>aaaaaa</main>' }
+	const Project = { template: '<main><tasks/><users/><issues/> issue user -- aaaaaassssssss</main>' }
+	const Private = { template: '<main><tasks/><issues/>私有 列 task 源 集合 项 集合 组 交互 个体 交互 关注集 收藏集 参与集</main>' }
+	const Foo = { template: '<div>foo</div>' }
+	const Bar = { template: '<div>bar</div>' }
+
+	const router = new VueRouter({
+		mode: 'hash', // hash | history
+		routes: [
+			{ path: '/', component: Home },
+			{ path: '/foo', component: Foo },
+			{ path: '/bar', component: Bar },
+			{ path: '/i:id', component: Idea },
+			{ path: '/private', component: Private },
+			{ path: '/p:id', component: Project },
+		]
+	})
+
+	var app = new Vue({
+		router,
+		el: '#app',
+		data: {
+			msg: 'you will'
+		}
+	})
+	/*
+	正在看的 属于关注的, 在信息改变时 发送通知
+	断开会话或是切换会话时, 终止连接计数 不再发送通知
+	分类 标签?
+	*/
 </script>
