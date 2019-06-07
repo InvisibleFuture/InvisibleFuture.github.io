@@ -36,6 +36,4 @@ func user(w http.ResponseWriter, r *http.Request){
 	# 项目
 	多方案 > 可推进方案 > 最优方案
 	热数据 在线的user
-	冷数据 过期的
-
 */

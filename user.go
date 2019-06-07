@@ -1,4 +1,3 @@
-
 package main
 
 import (
@@ -22,11 +21,6 @@ func init() {
 	defer USER_DB.Close()
 }
 
-// 来自外界的 指令 与设备主体是隔离的
-// 权限表与数据表是分离的
-// 初始化成功才允许继续主进程
-// 此处暂时不考虑user表的热自动化
-
 type Object interface{
 	Create(string)
 	Delete(string)
@@ -43,8 +37,8 @@ type User struct {
 	Token string
 }
 
-func (u *User)GetName() string {
-	return USER_DB.Get([]byte(u.Id))
+func (u *User)GetName() ([]byte, error) {
+	return USER_DB.Get([]byte(u.Id), nil)
 }
 
 func (u *User)SetName(new_name string) error {
