@@ -43,7 +43,7 @@ type User struct {
 	Token string
 }
 
-func (u *User)GetName() {
+func (u *User)GetName() string {
 	return USER_DB.Get([]byte(u.Id))
 }
 
