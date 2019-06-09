@@ -2,17 +2,59 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"encoding/json"
 	"log"
 )
 
 func main(){
 	fmt.Println("srart!")
-
+	http.HandleFunc("/api", api)
 	http.HandleFunc("/user", user)
-	err := http.ListenAndServe(":9999", nil)
+	err := http.ListenAndServe(":80", nil)
 	if err != nil {
 		log.Fatal("ListenAndSere: ", err)
 	}
+}
+
+type Profile struct {
+	Name    string
+	Hobbies []string
+}
+
+type item struct {
+	Name    string
+	Time    string
+	Master  []string
+	Partner []string
+	Task    []string
+}
+
+type task struct {
+	Name string
+	Time string
+}
+
+func apis(w http.ResponseWeiter, r *http.Request) {
+	//mo
+}
+
+func api(w http.ResponseWriter, r *http.Request) {
+	// all api > user
+	var u User
+	u.Id = r.FormValue("id")
+	u.Token = r.FormValue("token")
+	//if ok := u.Authentication(); !ok {
+	//	return //token not..  token time..
+	//}
+
+	profile := Profile{"Alex", []string{"snowboarding", "programming"}}
+	js, err := json.Marshal(profile)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(js)
 }
 
 func user(w http.ResponseWriter, r *http.Request){
