@@ -12,8 +12,7 @@ var (
 )
 
 func init() {
-	USER_DB, err := leveldb.OpenFile("data/user", nil)
-
+	USER_DB, err := leveldb.OpenFile("../data/user", nil)
 	if err != nil {
 		panic("USER_DB INIT ERROR")
 	}
@@ -26,17 +25,6 @@ func init() {
 	if val,ok := TOKEN_MAP.Load("TEAM"); ok {
 		fmt.Println(val)
 	}
-}
-
-type Object interface{
-	Create(string)
-	Delete(string)
-	Updata(string)
-}
-
-type Item struct {
-	Id string
-	Token string
 }
 
 type User struct {
@@ -52,6 +40,12 @@ func (u *User)Authentication() bool {
 	return false
 }
 
+func (u *User)SetToken() {
+	TOKEN_MAP.Store(u.Id, u.Token)
+}
+
+
+/*
 func (u *User)GetName() ([]byte, error) {
 	return USER_DB.Get([]byte(u.Id), nil)
 }
@@ -68,3 +62,5 @@ func (u *User)Delete(ids []string) string {
 	fmt.Println(ids)
 	return "ok"
 }
+*/
+
