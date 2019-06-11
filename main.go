@@ -1,8 +1,13 @@
 package main
 
 import (
+	"os"
 	"fmt"
 	"log"
+	"time"
+	"strings"
+	"os/signal"
+	"syscall"
 	"net/http"
 	"math/rand"
 	"encoding/json"
@@ -43,15 +48,6 @@ type attach struct {
 	Time string
 }
 
-type Project struct {
-	Name    string   `json:"name"`
-	Time    string   `json:"time"`
-	Item    string   `json:"item"`
-	Mark    []string `json:"mark"`
-	Master  []string `json:"master"`
-	Partner []string `json:"partner"`
-}
-
 var (
 	ITEM_DB *leveldb.DB
 )
@@ -62,10 +58,31 @@ func main(){
 	http.HandleFunc("/user", user)
 	http.HandleFunc("/project", project)
 	http.HandleFunc("/login", sign_in)
-	err := http.ListenAndServe(":80", nil)
-	if err != nil {
-		log.Fatal("ListenAndSere: ", err)
+
+	s := &http.Server{
+		Addr:           ":80",
+		Handler:        http.DefaultServeMux,
+		ReadTimeout:    10 * time.Second,
+		WriteTimeout:   10 * time.Second,
+		MaxHeaderBytes: 1 << 20,
 	}
+
+	go func() {
+		log.Println(s.ListenAndServe())
+		log.Println("server shutdown")
+	}()
+
+	// Handle SIGINT and SIGTERM.
+	ch := make(chan os.Signal)
+	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+	log.Println(<-ch)
+
+	// Stop the service gracefully.
+	log.Println(s.Shutdown(nil))
+
+	// Wait gorotine print shutdown message
+	time.Sleep(time.Second * 1)
+	log.Println("done.")
 }
 
 func mark(w http.ResponseWriter, r *http.Request){
@@ -141,45 +158,10 @@ func randSeq(n int) string {
 	return string(b)
 }
 
-func project(w http.ResponseWriter, r *http.Request) {
-	var u User
-	//通过url参数或post数据获取身份认证信息
-	//u.Id = r.FormValue("id")
-	//u.Token = r.FormValue("token")
-	//通过cookies获取身份认证信息// 禁止get方式操作数据操作只允许post 且附上token码
-	id, err := r.Cookie("id")
-	if err != nil {
-		return // 未登录
-	}
-	token, err := r.Cookie("token")
-	if err != nil {
-		return // 未登录
-	}
-	u.Id = id.Value
-	u.Token = token.Value
-	fmt.Println(u.Id)
-	fmt.Println(u.Token)
-	if ok := u.Authentication(); !ok {
-		data := Profile{"Alex", []string{"snowboarding", "programming"}}
-		js, err := json.MarshalIndent(data, "", "\t")
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-		w.Header().Set("Content-Type", "application/json")
-		w.Write(js)
-		return
-	}
-	data := Project{
-		"is project new",
-		"1984/06/12",
-		"19",
-		[]string{"434433","32321","32323"},
-		[]string{"a64d5a","d46a4d","d46w2a2"},
-		[]string{"d46ad46a4d5","d4w6a4d65"},
-	}
-	//profile := Profile{"Alex", []string{"snowboarding", "programming"}}
-	//js, err := json.Marshal(data)
+// 验证身份
+// 操作目标 > 权限验证
+// 回执信息
+func Echo(w http.ResponseWriter, data interface{}) {
 	js, err := json.MarshalIndent(data, "", "\t")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -187,6 +169,56 @@ func project(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
+}
+func Identity(r *http.Request, u *User) bool {
+	id, err := r.Cookie("id")
+	if err != nil {
+		return false
+	}
+	token, err := r.Cookie("token")
+	if err != nil {
+		return false
+	}
+	u.Id = id.Value
+	u.Token = token.Value
+	if ok := u.Authentication(); !ok {
+		return false
+	}
+	return true
+}
+type Data struct{
+	Code string // 未登录, 无权限, ERROR, 成功, 失败, 不存在
+}
+type Msg struct {
+	Code string `json:"code"`
+	Info string `json:"info"`
+}
+
+func project(w http.ResponseWriter, r *http.Request) {
+	var u User
+	if ok := Identity(r, &u); !ok {
+		Echo(w, Msg{"401","请求要求用户的身份认证"})
+		return
+	}
+
+	var p Project
+	p.Id = "23432" //r.FormValue("p")
+	mark, err := p.GetMark()
+	if err != nil {
+		Echo(w, Msg{"404","不存在的项目"})
+		return
+	}
+	p.Mark = strings.Fields(string(mark[:]))
+	Echo(w, Project{
+		Id:   "222",
+		Name: "is project new",
+		Time: "1984/06/12",
+		Item: "19",
+		Task:    []string{},
+		Mark:    []string{"434433","32321","32323"},
+		Master:  []string{"a64d5a","d46a4d","d46w2a2"},
+		Partner: []string{"d46ad46a4d5","d4w6a4d65"},
+	})
 }
 
 func Item_Tasks(w http.ResponseWriter, r *http.Request) {

@@ -4,6 +4,10 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 )
 
+var (
+	MARK_PROJECT_DB *leveldb.DB
+)
+
 type Mark struct {
 	Object string
 	Id     string
