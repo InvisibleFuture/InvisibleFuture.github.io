@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 	"strings"
+	"io/ioutil"
 	"os/signal"
 	"syscall"
 	"net/http"
@@ -50,14 +51,27 @@ type attach struct {
 
 var (
 	ITEM_DB *leveldb.DB
+	INDEX []byte
 )
-
+func init(){
+	file, err := os.Open("index.html")
+	if err != nil {
+		log.Fatal(err)
+	}
+	INDEX, err = ioutil.ReadAll(file)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
 func main(){
 	fmt.Println("srart!")
+	http.HandleFunc("/", index)
 	http.HandleFunc("/api", api)
-	http.HandleFunc("/user", user)
+	//http.HandleFunc("/user", user)
 	http.HandleFunc("/project", project)
-	http.HandleFunc("/login", sign_in)
+	http.HandleFunc("/project_create", project_create)
+	http.HandleFunc("/signin", sign_in)
+	http.HandleFunc("/signrw", sign_rw)
 
 	s := &http.Server{
 		Addr:           ":80",
@@ -84,6 +98,18 @@ func main(){
 	time.Sleep(time.Second * 1)
 	log.Println("done.")
 }
+func index(w http.ResponseWriter, r *http.Request){
+	file, err := os.Open("index.html")
+	if err != nil {
+		log.Fatal(err)
+	}
+	doc, err := ioutil.ReadAll(file)
+	if err != nil {
+		log.Fatal(err)
+	}
+	w.Write(doc)
+	//w.Write(INDEX)
+}
 
 func mark(w http.ResponseWriter, r *http.Request){
 	//mark不是组件自带功能, 作为插入件存在
@@ -99,14 +125,59 @@ func mark(w http.ResponseWriter, r *http.Request){
 	// 所有组件有必要分离
 }
 
-func project_item(w http.ResponseWriter, r *http.Request){
-	//p1 := item3232
-	//p2 := item3333
-	//data := []item{}
+type userinfo struct{
+	Id   string
+	Name string
 }
 
+/*
+func user(w http.ResponseWriter, r *http.Request) {
+	var u User
+
+	// 未登录的在前端不会连接到这里, cookie提供是必需的
+
+	id, err := r.Cookie("id")
+	if err != nil {
+		return false
+	}
+	token, err := r.Cookie("token")
+	if err != nil {
+		return false
+	}
+
+	var u User
+	u.Id = id.Value
+	u.Token = token.Value
+	if ok := u.Authentication(); !ok {
+		return false
+	}
+	// 已经确定登录身份
+	// 登录状态
+
+	// USER ID CK
+	// DATA IS
+	// EK
+	// RES
+	ids := []string{"233","234","235"}
+	var list []userinfo
+	for _, id := range ids {
+		name, _ := u.GetUser(id)
+		user := userinfo{Id:id,Name: string(name)}
+		list = append(list, user)
+	}
+	Echo(w, Msg{
+		Code: "200",
+		Info: "OK",
+		User: list,
+	})
+}
+*/
+
 func sign_in(w http.ResponseWriter, r *http.Request) {
-	// post !
+	if r.Method != "POST" {
+		return
+	}
+
 	var a Account
 	a.Account = "Last" //r.FormValue("account")
 	a.Password = "dedeff" //r.FormValue("password")
@@ -139,14 +210,51 @@ func sign_in(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("sign in ok !"))
 }
 func sign_up(w http.ResponseWriter, r *http.Request) {
-	//account := "Last"
-	//password := "dedeff"
-	//mail := "last@gmail.com"
+	// 必须是post提交
+	if r.Method != "POST" { return }
 
+	account := r.FormValue("account")
+	password := r.FormValue("password")
+	name := r.FormValue("name")
+	// 邮件并不是安全的, 使用自己的验证方式
+
+	// 特征码
+	signature = "voiajcfiojcoicjaioj39203920"
+	// 左利手右利手
+	// 甜粽党咸粽党
+
+	// 注册时间
+	// 注册地区
+	// 语言偏好
+	// 曾用ID
 	//name := "Last"
 
 	//verification := "45648"
 	//pw = a.GetPassword()
+}
+
+func sign_rw(w http.ResponseWriter, r *http.Request) {
+	var u User
+	if ok := Identity(r, &u); !ok {
+		cookieA := http.Cookie{Name:"id", Path:"/", MaxAge:-1}
+		http.SetCookie(w, &cookieA)
+		cookieB := http.Cookie{Name:"token", Path:"/", MaxAge:-1}
+		http.SetCookie(w, &cookieB)
+		Reply(w, 401, "续约失败, Token 已过期, 请重新登录")
+		return
+	}
+	fmt.Println(u)
+	Reply(w, 200,"续约成功, Token已更新")
+	/* 组成续约的像
+	 * 契约最小时间, 契约最大时间
+	 * 再生 token 写入token
+	 */
+}
+
+func Reply(w http.ResponseWriter, code int, info string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	w.Write([]byte(info))
 }
 
 var letters = []rune("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
@@ -186,18 +294,16 @@ func Identity(r *http.Request, u *User) bool {
 	}
 	return true
 }
-type Data struct{
-	Code string // 未登录, 无权限, ERROR, 成功, 失败, 不存在
-}
 type Msg struct {
-	Code string `json:"code"`
-	Info string `json:"info"`
+	Code string     `json:"code"`
+	Info string     `json:"info"`
+	User []userinfo `json:"user"`
 }
 
 func project(w http.ResponseWriter, r *http.Request) {
 	var u User
 	if ok := Identity(r, &u); !ok {
-		Echo(w, Msg{"401","请求要求用户的身份认证"})
+		Echo(w, Msg{Code:"401", Info:"请求要求用户的身份认证"})
 		return
 	}
 
@@ -205,20 +311,47 @@ func project(w http.ResponseWriter, r *http.Request) {
 	p.Id = "23432" //r.FormValue("p")
 	mark, err := p.GetMark()
 	if err != nil {
-		Echo(w, Msg{"404","不存在的项目"})
+		Echo(w, Msg{Code:"404", Info:"不存在的项目"})
 		return
 	}
 	p.Mark = strings.Fields(string(mark[:]))
 	Echo(w, Project{
-		Id:   "222",
-		Name: "is project new",
-		Time: "1984/06/12",
-		Item: "19",
+		Id:      p.Id,
+		Name:    "is project new",
+		Time:    0,
+		Item:    "19",
 		Task:    []string{},
 		Mark:    []string{"434433","32321","32323"},
 		Master:  []string{"a64d5a","d46a4d","d46w2a2"},
 		Partner: []string{"d46ad46a4d5","d4w6a4d65"},
 	})
+}
+
+func Chaos(w http.ResponseWriter, r *http.Request) {
+	var u User
+	if ok := Identity(r, &u); !ok {
+		Echo(w, Msg{Code:"401", Info:"请登录"})
+		return
+	}
+}
+
+func project_create(w http.ResponseWriter, r *http.Request) {
+	var u User
+	if ok := Identity(r, &u); !ok {
+		Echo(w, Msg{Code:"401", Info:"请求要求用户的身份认证"})
+		return
+	}
+	token := r.FormValue("token")
+	if token != u.Token {
+		Echo(w, Msg{Code:"500", Info:"非法请求, Post必须附上Token"})
+		return
+	}
+	var p Project
+	p.Id = "233" //生成序列数
+	p.Name = r.FormValue("name")
+	p.Time = time.Now().Unix()
+	p.Master = []string{u.Id}
+	fmt.Println(p)
 }
 
 func Item_Tasks(w http.ResponseWriter, r *http.Request) {
@@ -251,7 +384,7 @@ func api(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(js)
 }
-func user(w http.ResponseWriter, r *http.Request){
+func userss(w http.ResponseWriter, r *http.Request){
 	r.ParseForm()
 	var u User
 	// 任何交互操作都需要提供身份证明与目标目的

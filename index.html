@@ -1,19 +1,103 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Team</title>
-
+<style type="text/less">
+	body {
+		margin: 0;
+		padding: 0;
+	}
+	ul {
+		padding: 0;
+		margin: 0;
+		list-style: none;
+		border-radius: 3px;
+	}
+	.signin {
+		position: fixed;
+		top: 0;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		background: rgba(255,255,255,.8);
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		ul {
+			width: 100%;
+			max-width: 20rem;
+			background: rgba(200,200,200,1);
+			li {
+				input {
+					box-sizing: border-box;
+					padding: .5rem;
+					width: 100%;
+				}	
+			}
+		}
+	}
+</style>
 <div id="app">
+	<signin v-if="$store.state.signin"></signin>
+	<button v-if="!$store.state.online" v-on:click="$store.commit('signin', true)" v-text="$store.state.signin">Login</button>
 	<router-link to="/private">private</router-link>
 	<router-link to="/foo">Go to Foo</router-link>
 	<router-link to="/bar">Go to Bar</router-link>
-	<!-- 路由匹配到的组件将渲染在这里 -->
 	<router-view></router-view>
-	<!-- 技术攻关 进度 -->
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/vue"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/less.js/3.9.0/less.min.js" ></script>
+<!--script src="https://cdn.jsdelivr.net/npm/vue"></script-->
+<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+<script src="https://unpkg.com/vuex@3.1.1/dist/vuex.js"></script>
 <script src="https://unpkg.com/vue-router/dist/vue-router.js"></script>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script>
+	// 组件模式是最大化复用功能项, 如 list user curd mark 抽象列, 当没有组件需要这个像时, 既可以移除
+	Vue.component('list', {
+		template: `
+		<div class="list_project">
+			<ul>
+				<li>从 list +</li>
+			</ul>
+		</div>
+		`,
+		data: function () {
+			return {
+				list: [
+					{id:'aoaow', name:'aoaoao'},
+				]
+			}
+		}
+	})
+	Vue.component('signin', {
+		template: `
+		<div class="signin">
+			<ul>
+				<li><input :value="account" placeholder="account" /></li>
+				<li><input :value="password" placeholder="password" /></li>
+				<li v-on:click="signin">Sign in</li>
+				<li>Sign up , Forgot your account ?</li>
+			</ul>
+		</div>`,
+		data: function () {
+			return {
+				account: "Last",
+				password: "dedeff",
+			}
+		},
+		methods: {
+			signin: function () {
+				axios.post('/signin', { account: this.account, password: this.password }).then(function (r) {
+					console.log(r)
+					switch(r.status) {
+						case 200: console.log(r.data); store.commit("online", true); store.commit("signin", false); break
+						default: console.log(r.data)
+					}
+				})
+			}
+		}	
+	})
 	Vue.component('sources', {
 		template: `<ul class="source"><li v-for="source in sources"><span v-text="source.name"></span></li></ul>`,
 		data: function () { return { sources: [{ id: '323', name: 'asyam', detail: 'ams' }] } }
@@ -24,7 +108,8 @@
 	})
 	Vue.component('users', {
 		template: `<ul class="users"><li v-for="user in users"><span v-text="user.name"></span><span v-text="user.email"></span><span v-text="user.coordinate"></span></li></ul>`,
-		data: function () { return { users: [{ id: '123', name: 'Last', email: 'Last@max.exp', coordinate: '奧林帕斯山' }] } }
+		data: function () { return { users: [{ id: '123', name: 'Last', email: 'Last@max.exp', coordinate: '奧林帕斯山' }] } },
+		//mounted () { axios.get('/userlist').then(response => (this.info = response))}
 	})
 	Vue.component('guilds', {
 		template: `<ul class="guilds"><li v-for="item in list"><router-link :to="'p'+item.id"><span v-text="item.name"></span></router-link></li></ul>`,
@@ -34,18 +119,74 @@
 		template: `<ul class="projects"><li v-for="item in list"><router-link :to="'p'+item.id"><span v-text="item.name"></span></router-link></li></ul>`,
 		data: function () { return { list: [{ id: '122', name: '项目组' }] } }
 	})
+	Vue.component('project_create', {
+		template: `<ul>
+			<li v-text="name"></li>
+			<li v-text="master"></li>
+		</ul>`,
+		data: function () {
+			return {
+				name: "",
+				master: ["Last"], // 自己的id, 别人的id
+			}
+		},
+		// 创建时要配置的属性, 如公开和私有化, 版权声明, 文档名
+	})
 	Vue.component('tasks', {
 		template: `<ul class="tasks"><li v-for="item in list"><span v-text="item.name"></span></li></ul>`,
 		data: function () { return { list: [{ id: '122', name: 'task' }] } }
 	})
 	Vue.component('issues', {
 		template: `<ul class="issues"><li v-for="item in list"><span v-text="item.name"></span></li></ul>`,
-		data: function () { return { list: [{ id: '122', name: 'issue' }] } }
+		data: function () { return { list: [{ id: '122', name: 'issue' }] } },
+		methods: {}
+		// 此组件加载哪些id, 可加载的id范围 new issues / is item issues
+		// Vuex 返回一组数据 getuser(id_list)
+		// 先取出存在的, 再取出不存在的 取得不存在的, 合并 返回
 	})
 
-	const Home = { template: '<main><sources/><ideas/><users/><projects/></main>' }
+	// 页面告诉组件需要显示什么, 组件向仓库索取必要信息, 仓库向Server读取必要信息
+	const Home = {
+		template: '<main><sources/><ideas/><users/><projects/></main>',
+		//主页显示 source 源, ideas 想法, user 新角色活跃角色, project 新项目活跃项目
+	}
 	const Idea = { template: '<main>aaaaaa</main>' }
-	const Project = { template: '<main><tasks/><users/><issues/> issue user -- aaaaaassssssss</main>' }
+	const Project = {
+		template: `<main>
+			<h1 v-text="name"></h1>
+			<tasks/>
+			<users/>
+			<issues/>
+			issue user -- aaaaaassssssss
+		</main>`,
+		// 项目主体, 取项目主体信息
+		// get数据中得到:
+		data: function () {
+			return {
+				id: "4556",
+				name: "Pcjsaiajia",
+			}
+		},
+		computed: {
+			count() {
+				return this.$store.state.count
+			}
+		},
+		mounted: function () {
+			this.getdata()
+		},
+		methods: {
+			getdata: function () {
+				axios.get('/project', {params:{id: this.id}}).then( function(r){
+					switch(r.status) {
+						case 200: console.log(r.data); break
+						default: console.log(r.data)
+					}
+					console.log(r)
+				} )
+			}
+		}
+	}
 	const Private = { template: '<main><tasks/><issues/>私有 列 task 源 集合 项 集合 组 交互 个体 交互 关注集 收藏集 参与集</main>' }
 	const Foo = { template: '<div>foo</div>' }
 	const Bar = { template: '<div>bar</div>' }
@@ -62,16 +203,57 @@
 		]
 	})
 
-	var app = new Vue({
-		router,
-		el: '#app',
-		data: {
-			msg: 'you will'
+	const store = new Vuex.Store({
+		state: {
+			count: 0,
+			online: false, // 在线状态
+			signin: false, // 登录窗口显示
+			users: [],
+		},
+		mutations: {
+			signin(state, value) { state.signin = value },
+			online(state, value) { state.online = value },
 		}
 	})
-	/*
-	正在看的 属于关注的, 在信息改变时 发送通知
-	断开会话或是切换会话时, 终止连接计数 不再发送通知
-	分类 标签?
-	*/
+	
+	var app = new Vue({
+		store,
+		router,
+		el: '#app',
+		mounted() {
+			this.renew_token() // 每次载入页面时续约 token
+			axios.interceptors.response.use(response => {
+				return response;
+			}, error => {
+				if (error.response.status === 401) {
+					//place your reentry code
+				}
+				return error;
+			});
+		},
+		methods: {
+			renew_token: function () {
+				let c_id = document.cookie.indexOf("id=");
+				let c_token = document.cookie.indexOf("token=");
+				if( c_id != -1 && c_token != -1){
+					axios.get('/signrw').then(r => {
+						store.commit('online', true)
+					}).catch(error => {
+						store.commit('online', false)
+						this.set_cookie('id', '', -1)
+						this.set_cookie('token', '', -1)
+						console.log("error.response")
+						//console.clear()
+					})
+				}
+			},
+			set_cookie: function (cname, cvalue, exdays) {
+				let d = new Date()
+				d.setTime(d.getTime() + (exdays*24*60*60*1000))
+				let expires = "expires="+d.toUTCString()
+				document.cookie = cname + "=" + cvalue + "; " + expires
+			}
+		}
+	})
+
 </script>
