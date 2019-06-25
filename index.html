@@ -74,8 +74,8 @@
 		template: `
 		<div class="signin">
 			<ul>
-				<li><input :value="account" placeholder="account" /></li>
-				<li><input :value="password" placeholder="password" /></li>
+				<li><input v-model="account" placeholder="account" /></li>
+				<li><input v-model="password" placeholder="password" /></li>
 				<li v-on:click="signin">Sign in</li>
 				<li>Sign up , Forgot your account ?</li>
 			</ul>
@@ -98,6 +98,46 @@
 			}
 		}	
 	})
+	Vue.component('signup', {
+		template: `
+		<div class="signin">
+			<ul>
+				<li><input v-model="account" placeholder="account" /></li>
+				<li><input v-model="password" placeholder="password" /></li>
+				<li v-on:click="signin">Sign up</li>
+				<li>Sign in , Forgot your account ?</li>
+			</ul>
+		</div>`,
+		data: function () {
+			return {
+				account: "Lsast",
+				password: "00000000000000000000000000000000",
+			}
+		},
+		methods: {
+			signin: function () {
+				let ajax = new XMLHttpRequest()
+				ajax.open('post', '/signup', true)
+				ajax.setRequestHeader('content-type', 'application/x-www-form-urlencoded')
+				ajax.onreadystatechange = function(){ if (ajax.readyState == 4) {
+					if (ajax.status == 200) {
+						console.log(ajax.responseText)
+						alert('成功时')
+						store.commit("online", true)
+						store.commit("signin", false)
+					}
+					else{ alert('失败时'+this.account); console.log(ajax.responseText) }
+				}}
+				console.log(this.account)
+				ajax.send('account='+this.account+'&password='+this.password)
+			}
+		}
+	})
+
+	function alert(r){
+		console.log(r)
+	}
+
 	Vue.component('sources', {
 		template: `<ul class="source"><li v-for="source in sources"><span v-text="source.name"></span></li></ul>`,
 		data: function () { return { sources: [{ id: '323', name: 'asyam', detail: 'ams' }] } }
@@ -190,6 +230,8 @@
 	const Private = { template: '<main><tasks/><issues/>私有 列 task 源 集合 项 集合 组 交互 个体 交互 关注集 收藏集 参与集</main>' }
 	const Foo = { template: '<div>foo</div>' }
 	const Bar = { template: '<div>bar</div>' }
+	const Signup = { template: `<main><signup/></main>`
+	}
 
 	const router = new VueRouter({
 		mode: 'hash', // hash | history
@@ -200,6 +242,7 @@
 			{ path: '/i:id', component: Idea },
 			{ path: '/private', component: Private },
 			{ path: '/p:id', component: Project },
+			{ path: '/signup', component: Signup }
 		]
 	})
 

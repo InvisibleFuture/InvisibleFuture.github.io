@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"time"
+	"strconv"
 	"strings"
 	"io/ioutil"
 	"os/signal"
@@ -71,6 +72,7 @@ func main(){
 	http.HandleFunc("/project", project)
 	http.HandleFunc("/project_create", project_create)
 	http.HandleFunc("/signin", sign_in)
+	http.HandleFunc("/signup", sign_up)
 	http.HandleFunc("/signrw", sign_rw)
 
 	s := &http.Server{
@@ -95,7 +97,8 @@ func main(){
 	log.Println(s.Shutdown(nil))
 
 	// Wait gorotine print shutdown message
-	time.Sleep(time.Second * 1)
+	//time.Sleep(time.Second * 1)
+	// 结束所有数据库连接
 	log.Println("done.")
 }
 func index(w http.ResponseWriter, r *http.Request){
@@ -210,28 +213,61 @@ func sign_in(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("sign in ok !"))
 }
 func sign_up(w http.ResponseWriter, r *http.Request) {
-	// 必须是post提交
-	if r.Method != "POST" { return }
+	account := Account{
+		Account: r.FormValue("account"),
+		Password: r.FormValue("password"),
+	}
 
-	account := r.FormValue("account")
-	password := r.FormValue("password")
-	name := r.FormValue("name")
-	// 邮件并不是安全的, 使用自己的验证方式
+	fmt.Println(r.FormValue("account"))
+	if r.Method != "POST" {
+		Reply(w, 403, "POST 方式提交必须")
+		return
+	}
 
+	if l := len(account.Account); l < 4 || l > 32 {
+		Reply(w, 403, "账号格式不符")
+		return
+	}
+
+	if l := len(account.Password); l != 32 {
+		Reply(w, 403, "密钥格式不符")
+		return
+	}
+
+	_, err := account.GetId()
+	if err == nil {
+		Reply(w, 403, "账号已占用")
+		return
+	}
+
+	id := <-AUTOID_USER_CH
+	user := User{ Id: strconv.FormatInt(id, 10), Token: randSeq(32) }
+
+	account.Create(user.Id)
+	user.SetToken()
+
+	cookieK := http.Cookie{Name:"id",Value:user.Id,Path:"/", MaxAge:86400}
+	cookieV := http.Cookie{Name:"token",Value:user.Token,Path:"/",MaxAge:86400}
+	http.SetCookie(w, &cookieK)
+	http.SetCookie(w, &cookieV)
+	w.Write([]byte("sign in ok !"))
+}
+
+	// 邮件并不是安全的, 使用自己的安全验证方式
 	// 特征码
-	signature = "voiajcfiojcoicjaioj39203920"
-	// 左利手右利手
-	// 甜粽党咸粽党
-
-	// 注册时间
-	// 注册地区
-	// 语言偏好
-	// 曾用ID
-	//name := "Last"
-
+	//signature := "voiajcfiojcoicjaioj39203920"
+	// 左利手右利手 甜粽党咸粽党
+	// 注册时间 注册地区 语言偏好 曾用name
 	//verification := "45648"
 	//pw = a.GetPassword()
-}
+
+	//检查名字占用
+	//USER_NAME_DB, 高效检索库? 首字母 多字母
+	// 生成一个ID, item task作为高频读写项目是否必要带id
+	// 如不对项目进行单独的读取, 则不必要带id
+	// 角色与项目是必要使用id的, 然后标签分类也要
+	//id := NewId()
+	//USER_NAME_DB.Put([]byte(id))
 
 func sign_rw(w http.ResponseWriter, r *http.Request) {
 	var u User
@@ -352,6 +388,10 @@ func project_create(w http.ResponseWriter, r *http.Request) {
 	p.Time = time.Now().Unix()
 	p.Master = []string{u.Id}
 	fmt.Println(p)
+
+	// 验证输入的数据有效
+	// 创建 PID, 建立P
+	// 追加 PID 到 USER表
 }
 
 func Item_Tasks(w http.ResponseWriter, r *http.Request) {

@@ -17,24 +17,31 @@ type Account struct {
 func init() {
 	var err error
 	ACCOUNT_PW_DB, err = leveldb.OpenFile("../data/account_pw", nil)
-	if err != nil {
-		panic("ACCOUNT_PW_DB INIT ERROR")
-	}
+	if err != nil { panic("ACCOUNT_PW_DB INIT ERROR") }
+
 	ACCOUNT_ID_DB, err = leveldb.OpenFile("../data/account_id", nil)
-	if err != nil {
-		panic("ACCOUNT_ID_DB INIT ERROR")
-	}
+	if err != nil { panic("ACCOUNT_ID_DB INIT ERROR") }
+
 	ACCOUNT_PW_DB.Put([]byte("Last"), []byte("dedeff"), nil)
 	ACCOUNT_ID_DB.Put([]byte("Last"), []byte("233"), nil)
 }
 
-func (a *Account)GetPassword() ([]byte, error) {
-	return ACCOUNT_PW_DB.Get([]byte(a.Account), nil)
-}
-func (a *Account)GetId() ([]byte, error) {
-	return ACCOUNT_ID_DB.Get([]byte(a.Account), nil)
+//type Create interface {}
+
+func (a *Account)Create(id string) {
+	var err error
+	err = ACCOUNT_PW_DB.Put([]byte(a.Account), []byte(a.Password), nil)
+	if err != nil { panic("ACCOUNT_PW_DB CREATE ERROR") }
+	err = ACCOUNT_ID_DB.Put([]byte(a.Account), []byte(id), nil)
+	if err != nil { panic("ACCOUNT_ID_DB CREATE ERROR") }
 }
 
+func (a Account)GetPassword() ([]byte, error) {
+	return ACCOUNT_PW_DB.Get([]byte(a.Account), nil)
+}
+func (a Account)GetId() ([]byte, error) {
+	return ACCOUNT_ID_DB.Get([]byte(a.Account), nil)
+}
 
 
 /*

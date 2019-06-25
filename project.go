@@ -1,6 +1,9 @@
 package main
 
 import (
+	"fmt"
+	"bytes"
+	"encoding/binary"
 	"github.com/syndtr/goleveldb/leveldb"
 )
 
@@ -8,10 +11,12 @@ var (
 	PROJECT_NAME_DB *leveldb.DB
 	PROJECT_MARK_DB *leveldb.DB
 	PROJECT_LIST_DB *leveldb.DB // 项目列表 所有
-	// 为项目打TAG?
-	// 如何计算项目关注度与活跃度两项或更多项指标?
-	// 主页显示什么, 分P如何显示,分P的矩阵关系表
-	// 
+	PROJECT_TAGS_DB *leveldb.DB // 为项目打TAG?
+
+	AUTOID_DB *leveldb.DB // 每次都将ID+1并写入
+
+	AUTOID_USER_CH chan int64
+	AUTOID_PROJECT_CH chan int64
 )
 
 type Project struct {
@@ -26,21 +31,70 @@ type Project struct {
 }
 
 func init() {
+	// 初始化前检查剩余空间与权限
+
 	var err error
-	PROJECT_NAME_DB, err = leveldb.OpenFile("../data/peoject_name", nil)
-	if err != nil {
-		panic("PROJECT_NAME_DB INIT ERROR")
-	}
-	PROJECT_MARK_DB, err = leveldb.OpenFile("../data/peoject_mark", nil)
-	if err != nil {
-		panic("PROJECT_NAME_DB INIT ERROR")
-	}
+	PROJECT_NAME_DB, err = leveldb.OpenFile("../data/project_name", nil)
+	if err != nil { panic("PROJECT_NAME_DB INIT ERROR") }
+
+	PROJECT_MARK_DB, err = leveldb.OpenFile("../data/project_mark", nil)
+	if err != nil { panic("PROJECT_MARK_DB INIT ERROR") }
+
+	PROJECT_TAGS_DB, err = leveldb.OpenFile("../data/project_tags", nil)
+	if err != nil { panic("PROJECT_TAGS_DB INIT ERROR") }
+
+	PROJECT_LIST_DB, err = leveldb.OpenFile("../data/project_list", nil)
+	if err != nil { panic("PROJECT_LIST_DB INIT ERROR") }
+
+	AUTOID_DB, err = leveldb.OpenFile("../data/autoid", nil)
+	if err != nil { panic("AUTOID_DB INIT ERROR") }
+
+	// 创建通道
+	AUTOID_USER_CH = make(chan int64)
+	AUTOID_PROJECT_CH = make(chan int64)
+
+	// AUTOID INIT GO
+	go autoid("user", AUTOID_USER_CH)
+	go autoid("project", AUTOID_PROJECT_CH)
+
+	var sum int64
+	sum = <-AUTOID_USER_CH
+	fmt.Println("get", sum)
+
+	sum = <-AUTOID_USER_CH
+	fmt.Println("get", sum)
+
+	sum = <-AUTOID_USER_CH
+	fmt.Println("get", sum)
+
+	sum = <-AUTOID_USER_CH
+	fmt.Println("get", sum)
 }
 
-// 底层操作, 逻辑选择
-// 删除一个project, project下有 task item mark repy, 关联 user
-// 删除一个task, task下有repy, 关联 user
-// 即删除每个对象都操作关联的下级, 因为project并不是独立档, 而是由其他档拼接而成
+func autoid(name string, c chan int64) {
+	buf := new(bytes.Buffer)
+
+	data, err := AUTOID_DB.Get([]byte(name), nil)
+	if err != nil {
+		binary.Write(buf, binary.BigEndian, 0)
+		data = buf.Bytes()
+		err = AUTOID_DB.Put([]byte(name), data, nil)
+		if err != nil { panic("AUTOID_DB " + name + " INIT ERROR") }
+		fmt.Println("计数器初始化", name)
+	}
+
+	var sum int64
+	binary.Read(bytes.NewBuffer(data), binary.LittleEndian, &sum)
+	fmt.Println("计数器", name, sum)
+	for {
+		sum++
+		c <- sum
+		buf = new(bytes.Buffer)
+		binary.Write(buf, binary.LittleEndian, sum)
+		err = AUTOID_DB.Put([]byte(name), buf.Bytes(), nil)
+		if err != nil { panic("AUTOID ++ ERROR") }
+	}
+}
 
 //func (p Project)Delete() error {
 	// 包含的

@@ -44,6 +44,21 @@ type User struct {
 	Token string
 }
 
+func (u User)Create() {
+	//id := <-AUTOID_USER_CH
+	//USER_
+}
+
+func (u *User)AddProject(id []string) {
+	//data, err := USER_PROJECT_DB.Get([]byte(u.Id), nil)
+	//if err != nil { return nil, err }
+	//list := strings.Fields(string(data))
+	// 不必拆分直接追加? 需要对比重复的存在
+	//fmt.Println(list) //[]string
+	//对比是否有重复
+	//向list 追加两个string
+}
+
 func (u *User)Authentication() bool {
 	val,ok := TOKEN_MAP.Load(u.Id)
 	if ok && val == u.Token {
