@@ -1,25 +1,26 @@
-package demo
+package main
 
 import (
 	"log"
-        //"time"
-        "sync"
-        "bytes"
-        //"strings"
-        "encoding/binary"
+	"sync"
+	"bytes"
+	"math/rand"
+	"encoding/binary"
 	"github.com/syndtr/goleveldb/leveldb"
 )
-
 var (
+	ACCOUNT_ID_DB     *leveldb.DB
+	ACCOUNT_PW_DB     *leveldb.DB
+
+	USER_NAME_DB      *leveldb.DB
+	USER_MARK_DB      *leveldb.DB
+	USER_PROJECT_DB   *leveldb.DB
+
 	PROJECT_NAME_DB   *leveldb.DB
 	PROJECT_MARK_DB   *leveldb.DB
 	PROJECT_TAGS_DB   *leveldb.DB // 为项目打TAG?
 	PROJECT_TIME_DB   *leveldb.DB
 	PROJECT_MASTER_DB *leveldb.DB
-
-	USER_NAME_DB      *leveldb.DB
-	USER_MARK_DB      *leveldb.DB
-	USER_PROJECT_DB   *leveldb.DB
 
 	LIST_PROJECT_DB   *leveldb.DB // 项目列表 所有
 
@@ -31,11 +32,20 @@ var (
 	TOKEN_MAP         sync.Map
 )
 
-var Texts = "adclisaj"
 func init() {
 	// 初始化前检查剩余空间与权限
 
 	var err error
+
+	// ACCOUNT
+	ACCOUNT_PW_DB, err = leveldb.OpenFile("../data/account_pw", nil)
+	if err != nil { panic("ACCOUNT_PW_DB INIT ERROR") }
+
+	ACCOUNT_ID_DB, err = leveldb.OpenFile("../data/account_id", nil)
+	if err != nil { panic("ACCOUNT_ID_DB INIT ERROR") }
+
+	ACCOUNT_PW_DB.Put([]byte("Last"), []byte("dedeff"), nil)
+	ACCOUNT_ID_DB.Put([]byte("Last"), []byte("233"), nil)
 
 	// USER
 	USER_NAME_DB, err = leveldb.OpenFile("../data/user_name", nil)
@@ -85,7 +95,6 @@ func init() {
 	//defer USER_DB.Close()
 }
 
-
 func autoid(name string, c chan int64) {
 	buf := new(bytes.Buffer)
 
@@ -111,62 +120,12 @@ func autoid(name string, c chan int64) {
 	}
 }
 
-type Object interface {
-	Delete() bool
-	Create(name []byte)
-	Updata()
-	Load()
-}
-type User    []byte
-type Project []byte
-type Tag     []byte
 
-// user 固有的属性是不能增加删除的
-// 作为一体化信息, 删除 user 整体痕迹
-// 才能一并删除所有属性
-// 但修改单个属性呢?
-func (u User)Delete() bool {
-	var err error
-	err = USER_NAME_DB.Delete(u, nil)
-	if err != nil {}
-	err = USER_MARK_DB.Delete(u, nil)
-	if err != nil {}
-	return true
-}
-func (u User)Load() {}
-func (u User)Updata() {}
-func (u User)Rewrite(item, name []byte) {
-	// ??? 修改并不是重写
-	// 修改是对单一属性对象的改变
-}
-func (u User)Create(name []byte) {
-	// 并不存在明确目标的事物创建
-	// 操作本身不具有签名, 事物签名是后置的, 也可以选择不
-	// 留言 刻画
-	// 对象是有明确结构的 可复数的 生物性的
-	var err error
-	err = USER_NAME_DB.Put(u, name, nil)
-	if err != nil {}
-	err = USER_MARK_DB.Put(u, name, nil)
-	if err != nil {}
-}
-func (u User)Token(name []byte) bool {
-	return true
-}
-func (p Project)Delete() bool {
-	var err error
-	err = PROJECT_NAME_DB.Delete(p, nil)
-	if err != nil {
-		log.Println(err)
+func randSeq(n int) string {
+	var letters = []rune("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
 	}
-	//解除关联, 收藏, 关注, 上级
-	//删除子级
-	return true
+	return string(b)
 }
-func (p Project)Load() {}
-func (p Project)Create(name []byte) {}
-func (p Project)Updata() {}
-func (t Tag)Delete() bool {
-	return true
-}
-func (t Tag)Create(name []byte) {}

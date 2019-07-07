@@ -1,32 +1,20 @@
 package main
 
-import (
-	"github.com/syndtr/goleveldb/leveldb"
-)
+type Account []byte
 
-var (
-	ACCOUNT_ID_DB *leveldb.DB
-	ACCOUNT_PW_DB *leveldb.DB
-)
+func (account Account)Create(password []byte) {
+	var err error
+	err = ACCOUNT_PW_DB.Put(account, password, nil)
+	if err != nil { panic(err) }
+	err = ACCOUNT_ID_DB.Put(account, id, nil)
+	if err != nil { panic(err) }
+}
 
+/**
 type Account struct {
 	Account  string
 	Password string
 }
-
-func init() {
-	var err error
-	ACCOUNT_PW_DB, err = leveldb.OpenFile("../data/account_pw", nil)
-	if err != nil { panic("ACCOUNT_PW_DB INIT ERROR") }
-
-	ACCOUNT_ID_DB, err = leveldb.OpenFile("../data/account_id", nil)
-	if err != nil { panic("ACCOUNT_ID_DB INIT ERROR") }
-
-	ACCOUNT_PW_DB.Put([]byte("Last"), []byte("dedeff"), nil)
-	ACCOUNT_ID_DB.Put([]byte("Last"), []byte("233"), nil)
-}
-
-//type Create interface {}
 
 func (a *Account)Create(id string) {
 	var err error
@@ -42,7 +30,7 @@ func (a Account)GetPassword() ([]byte, error) {
 func (a Account)GetId() ([]byte, error) {
 	return ACCOUNT_ID_DB.Get([]byte(a.Account), nil)
 }
-
+**/
 
 /*
 func (a *Account)CK() (string, bool) {

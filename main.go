@@ -11,7 +11,6 @@ import (
 	"os/signal"
 	"syscall"
 	"net/http"
-	"math/rand"
 	"encoding/json"
 	"github.com/syndtr/goleveldb/leveldb"
 )
@@ -169,6 +168,7 @@ func Delete(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
+	/**
 	var o Object
 	switch target {
 	case "project": o = Project{ Id: id }
@@ -181,6 +181,7 @@ func Delete(w http.ResponseWriter, r *http.Request){
 		Reply(w, 200, "拒绝")
 		return
 	}
+	**/
 
 	Reply(w, 403, "成功")
 }
@@ -213,49 +214,6 @@ type userinfo struct{
 	Id   string
 	Name string
 }
-
-/*
-func user(w http.ResponseWriter, r *http.Request) {
-	var u User
-
-	// 未登录的在前端不会连接到这里, cookie提供是必需的
-
-	id, err := r.Cookie("id")
-	if err != nil {
-		return false
-	}
-	token, err := r.Cookie("token")
-	if err != nil {
-		return false
-	}
-
-	var u User
-	u.Id = id.Value
-	u.Token = token.Value
-	if ok := u.Authentication(); !ok {
-		return false
-	}
-	// 已经确定登录身份
-	// 登录状态
-
-	// USER ID CK
-	// DATA IS
-	// EK
-	// RES
-	ids := []string{"233","234","235"}
-	var list []userinfo
-	for _, id := range ids {
-		name, _ := u.GetUser(id)
-		user := userinfo{Id:id,Name: string(name)}
-		list = append(list, user)
-	}
-	Echo(w, Msg{
-		Code: "200",
-		Info: "OK",
-		User: list,
-	})
-}
-*/
 
 func sign_in(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
@@ -375,16 +333,6 @@ func Reply(w http.ResponseWriter, code int, info string) {
 	w.WriteHeader(code)
 	w.Write([]byte(info))
 }
-
-var letters = []rune("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
-func randSeq(n int) string {
-	b := make([]rune, n)
-	for i := range b {
-		b[i] = letters[rand.Intn(len(letters))]
-	}
-	return string(b)
-}
-
 func Echo(w http.ResponseWriter, data interface{}) {
 	js, err := json.MarshalIndent(data, "", "\t")
 	if err != nil {

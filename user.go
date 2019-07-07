@@ -17,25 +17,31 @@ func (u User)Create(target, id string) {
 }
 
 // 角色可操作的项目 || 可被操作的项目
-func (u User)Delete(object interface{}) bool {
+func (u User)Delete(id []byte) bool {
 	// 验证身份
 	if t, ok := TOKEN_MAP.Load(u.Id); !ok || t != u.Token {
 		return false
 	}
 
 	// 验证权限
+	//if u.Id != id {
+	//	return false
+	//}
+	/**
 	if ok := object.Master(u.Id); !ok {
 		return false
 	}
-
 	// 操作删除
 	if err := object.Delete(); err != nil {
 		return false
 	}
+	**/
 
 	return true
 }
-func (u User)Master(id string) ([]string, bool) {
+
+/** 这是其他项的权限判断方法
+func (u User)Master(id string) bool {
 	data, err := USER_MASTER_DB.Get([]byte(u.Id), nil)
 	if err != nil { return false }
 	list := strings.Fields(string(data))
@@ -45,7 +51,7 @@ func (u User)Master(id string) ([]string, bool) {
 		}
 	}
 	return false
-}
+}**/
 
 func (u User)ProjectPush(id string) {
 	// 此处也可以考虑直接对 []byte 拼接,而不是转回 string
