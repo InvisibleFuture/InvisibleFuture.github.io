@@ -156,18 +156,27 @@
 		data: function () { return { list: [{ id: '122', name: '项目组' }] } }
 	})
 	Vue.component('projects', {
-		template: `<ul class="projects"><li v-for="item in list"><router-link :to="'p'+item.id"><span v-text="item.name"></span></router-link></li></ul>`,
-		data: function () { return { list: [{ id: '122', name: '项目组' }] } }
+		template: `<ul class="projects">
+			<li v-for="item in list">
+				<router-link :to="'p'+item.id"><span v-text="item.name"></span></router-link>
+			</li>
+		</ul>`,
+		data: function () {
+			return {
+				list: [
+					{ id: '122', name: '项目组' }
+				]
+			}
+		}
 	})
 	Vue.component('project_create', {
 		template: `<ul>
-			<li v-text="name"></li>
-			<li v-text="master"></li>
+			<li><input v-model="name" placeholder="project name"/></li>
+			<li>aoaoa</li>
 		</ul>`,
 		data: function () {
 			return {
 				name: "",
-				master: ["Last"], // 自己的id, 别人的id
 			}
 		},
 		// 创建时要配置的属性, 如公开和私有化, 版权声明, 文档名
@@ -177,23 +186,95 @@
 		data: function () { return { list: [{ id: '122', name: 'task' }] } }
 	})
 	Vue.component('issues', {
-		template: `<ul class="issues"><li v-for="item in list"><span v-text="item.name"></span></li></ul>`,
-		data: function () { return { list: [{ id: '122', name: 'issue' }] } },
-		methods: {}
-		// 此组件加载哪些id, 可加载的id范围 new issues / is item issues
-		// Vuex 返回一组数据 getuser(id_list)
-		// 先取出存在的, 再取出不存在的 取得不存在的, 合并 返回
+		template: `<ul class="issues">
+			<li v-for="item in list"><span v-text="item.name"></span></li>
+		</ul>`,
+		data: function () {
+			return {
+				list: [
+					{ id: '122', name: 'issue' },
+					{ id: '122', name: 'issue' },
+					{ id: '122', name: 'issue' },
+				]
+			}
+		}
 	})
+	Vue.component('items',{
+		template: `<ul class="items">
+			<li v-for="item in list">
+				<span v-text="item.name"></span>
+				<span v-text="item.info"></span>
+				<issues/>
+			</li>
+		</ul>`,
+		data: function () {
+			return {
+				list:[{
+					id:"5645",
+					time:"16515146",
+					name:"item_name",
+					info:"item_info",
+					issues:[{
+						id:"1231",
+						time:"4615156151",
+						content:"15515啊啊萨多瓦上的",
+						reply:[{
+							id:"4654",
+							time:"46465654",
+							content:"reply info is..",
+							attach:[{
+								id:"2342",
+								time:"14465464",
+								name:"cjoaijcoia",
+								type:"zip",
+								size:"10240000", //byte
+							}]
+						}]
+					}]
+				}]
+			}
+		}
+	})
+	
 
 	// 页面告诉组件需要显示什么, 组件向仓库索取必要信息, 仓库向Server读取必要信息
 	const Home = {
 		template: '<main><sources/><ideas/><users/><projects/></main>',
+		data: function () {
+			return {}
+		},
+		mounted: function () {
+			this.getdata()
+		},
+		methods: {
+			getdata: function(){
+				let ajax = new XMLHttpRequest()
+				ajax.open('get', '/home', true)
+				ajax.setRequestHeader('content-type', 'application/x-www-form-urlencoded')
+				ajax.onreadystatechange = function(){ if (ajax.readyState == 4) {
+					if (ajax.status == 200) {
+						console.log(ajax.responseText)
+						alert('成功时')
+						//store.commit("online", true)
+						//store.commit("signin", false)
+					}else{
+						alert('失败时'+this.account);
+						console.log(ajax.responseText)
+					}
+				}}
+				console.log(this.account)
+				ajax.send('account='+this.account+'&password='+this.password)
+			}
+		},
 		//主页显示 source 源, ideas 想法, user 新角色活跃角色, project 新项目活跃项目
 	}
 	const Idea = { template: '<main>aaaaaa</main>' }
 	const Project = {
 		template: `<main>
+			<project_create/>
+			<hr/>
 			<h1 v-text="name"></h1>
+			<items/>
 			<tasks/>
 			<users/>
 			<issues/>
@@ -264,15 +345,11 @@
 		router,
 		el: '#app',
 		mounted() {
-			this.renew_token() // 每次载入页面时续约 token
-			axios.interceptors.response.use(response => {
-				return response;
-			}, error => {
-				if (error.response.status === 401) {
-					//place your reentry code
-				}
-				return error;
-			});
+			// 先检查是否持已有 token
+			this.renew_token() // 初始化不必检查有效期, 直接时续约 token
+			// 续约失败时清空状态和数据
+			// 发送当前主页版本, 读取版本, 高于当前版本的会附带数据, 更新版本数据 到 local
+			// 建立 ws 连接
 		},
 		methods: {
 			renew_token: function () {
