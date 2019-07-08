@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+	"io/ioutil"
 	"log"
 	"sync"
 	"bytes"
@@ -29,7 +31,9 @@ var (
 	AUTOID_USER_CH    chan int64
 	AUTOID_PROJECT_CH chan int64
 
-	TOKEN_MAP         sync.Map
+	USER_TOKEN_MAP    sync.Map
+
+	WEB_HTML_MAP      sync.Map
 )
 
 func init() {
@@ -81,12 +85,26 @@ func init() {
 	if err != nil { panic("AUTOID_DB INIT ERROR") }
 
 	// 通道初始化
-	AUTOID_USER_CH = make(chan int64)
+	AUTOID_USER_CH    = make(chan int64)
 	AUTOID_PROJECT_CH = make(chan int64)
 
 	// 自增数值独立进程初始化
 	go autoid("user", AUTOID_USER_CH)
 	go autoid("project", AUTOID_PROJECT_CH)
+
+	// HTML 文件初始化到内存或实现一个监听进程
+	file, err := os.Open("./html/index.html")
+	if err != nil { panic("OPEN FILE INDEX.HTML ERROR") }
+	html, err := ioutil.ReadAll(file)
+	if err != nil { panic("LAOD FILE INDEX.HTML ERROR") }
+	WEB_HTML_MAP.Store("home", html)
+	// 监听 HTML 文件修改
+
+	// 设定 HTML 储存文档
+	// 设定 CSS 储存文档 LESS ?
+	// 设定 JS 储存文档
+
+	// 设定 IMAGE 储存文档
 
 	//USER_NAME_DB.Put([]byte("233"),[]byte("Last"), nil)
 	//data, err := db.Get([]byte("key"), nil)

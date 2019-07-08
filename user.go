@@ -1,42 +1,38 @@
 package main
 
 import (
-	"fmt"
 	"bytes"
-	"strings"
 )
 
+
+type User []byte
+func (u User)SetToken() string {
+	token := randSeq(32)
+	USER_TOKEN_MAP.Store(u, token)
+	// 注意还需要重置有c效时间
+	return token
+}
+func (u User)RwToken() string {
+	token := randSeq(32)
+	USER_TOKEN_MAP.Store(u, token)
+	return token
+}
+
+/**
 type User struct {
 	Id string
 	Token string
 }
-
+**/
 func (u User)Create(target, id string) {
 	//id := <-AUTOID_USER_CH
 	//USER_
 }
 
-// 角色可操作的项目 || 可被操作的项目
 func (u User)Delete(id []byte) bool {
-	// 验证身份
-	if t, ok := TOKEN_MAP.Load(u.Id); !ok || t != u.Token {
-		return false
-	}
-
 	// 验证权限
-	//if u.Id != id {
-	//	return false
-	//}
-	/**
-	if ok := object.Master(u.Id); !ok {
-		return false
-	}
 	// 操作删除
-	if err := object.Delete(); err != nil {
-		return false
-	}
-	**/
-
+	// 回执
 	return true
 }
 
@@ -54,30 +50,15 @@ func (u User)Master(id string) bool {
 }**/
 
 func (u User)ProjectPush(id string) {
-	// 此处也可以考虑直接对 []byte 拼接,而不是转回 string
-	data, err := USER_PROJECT_DB.Get([]byte(u.Id), nil)
+	data, err := USER_PROJECT_DB.Get(u, nil)
 	if err != nil { panic("USER_PROJECT_DB PULL ERROR") }
 	//list := strings.Fields(string(data))
 	var buf bytes.Buffer
 	buf.WriteString(string(data))
 	buf.WriteString(" ")
 	buf.WriteString(id)
-	err = USER_PROJECT_DB.Put([]byte(u.Id), []byte(buf.String()), nil)
+	err = USER_PROJECT_DB.Put(u, []byte(buf.String()), nil)
 	if err != nil { panic("USER_PROJECT_DB PUSH ERROR") }
-}
-
-func (u *User)Authentication() bool {
-	val,ok := TOKEN_MAP.Load(u.Id)
-	fmt.Println(val," ",u.Token)
-	if ok && val == u.Token {
-		return true
-	}
-	return false
-}
-
-func (u *User)SetToken() {
-	TOKEN_MAP.Store(u.Id, u.Token)
-	// 注意还需要重置有效时间
 }
 
 //func (u *User)GetProject() ([]string, error) {
@@ -96,7 +77,7 @@ func (u *User)SetToken() {
 //	fmt.Println(list, data)
 //	return list, err
 //}
-
+/**
 func (u *User)GetMark() ([]string, error) {
 	mark, err := USER_MARK_DB.Get([]byte(u.Id), nil)
 	if err != nil {
@@ -122,4 +103,4 @@ func (u *User)GetProject() ([]string, error) {
 	fmt.Println(list)
 	return list, err
 }
-
+**/
