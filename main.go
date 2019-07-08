@@ -136,20 +136,26 @@ func sign_in(w http.ResponseWriter, r *http.Request) {
 	account  := r.FormValue("account")
 	password := r.FormValue("password")
 
-	if account == "" || password == "" {
-		Reply(w, 403, "账号密码格式错误")
+	if l := len(account); l < 4 || l > 32 {
+		Reply(w, 403, "账号格式不符")
+		return
 	}
 
-	id, ok := Account(account).Signin(password)
+	if l := len(password); l != 32 {
+		Reply(w, 403, "未加密的密钥")
+		return
+	}
+
+	id, ok := Account([]byte(account)).Signin(password)
 	if !ok {
 		Reply(w, 403, "帐号密码不匹配")
 		return
 	}
 
 	// 薄弱
-	id_byte := []byte(id)
-	u := User(id_byte)
-	token := u.SetToken()
+	//id_byte := []byte(id)
+	//u := User(id_byte)
+	token := rwtoken(string(id))
 
 	Reply(w, 200, token) //+id
 
@@ -181,7 +187,7 @@ func sign_in(w http.ResponseWriter, r *http.Request) {
 }
 func sign_up(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
-		Reply(w, 403, "POST 方式提交必须 x")
+		Reply(w, 403, "POST 方式提交必须")
 		return
 	}
 
@@ -189,25 +195,25 @@ func sign_up(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("password")
 
 	if l := len(account); l < 4 || l > 32 {
-		Reply(w, 403, "账号格式不符 x")
+		Reply(w, 403, "账号格式不符")
 		return
 	}
 
 	if l := len(password); l != 32 {
-		Reply(w, 403, "密钥格式不符 x")
+		Reply(w, 403, "未加密的密钥")
 		return
 	}
 
-	a := Account([]byte(account))
-	id, ok := a.Create([]byte(password))
+	id_byte, ok := Account([]byte(account)).Create([]byte(password))
 	if !ok {
-		Reply(w, 403, "账号已占用 x")
+		Reply(w, 403, "账号已占用")
 		return
 	}
 
-	token := User(id).SetToken()
+	id := string(id_byte)
+	token := rwtoken(id)
 
-	m := make(map[string]interface{})
+	m := make(map[string]string)
 	m["id"] = id
 	m["token"] = token
 	Echo(w, m)
@@ -227,15 +233,16 @@ func sign_rw(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 验证身份
-	val, ok := USER_TOKEN_MAP.Load(id)
+	val, ok := WEB_TOKEN_MAP.Load(id)
 	if !ok || val != token{
 		Reply(w, 401, "验证失败 请重新登录")
 		return
 	}
 
 	// 重置 token
-	u := User([]byte(id))
-	token = u.SetToken()
+	//u := User([]byte(id))
+	//token = u.SetToken()
+	token = rwtoken(id)
 
 	// 回执
 	m := make(map[string]interface{})
@@ -287,7 +294,7 @@ func project(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 验证身份
-	val, ok := USER_TOKEN_MAP.Load(uid)
+	val, ok := WEB_TOKEN_MAP.Load(uid)
 	if !ok || val != token{
 		Reply(w, 401, "验证失败 请重新登录")
 		return
@@ -332,7 +339,7 @@ func project_create(w http.ResponseWriter, r *http.Request) {
 	uid   := r.FormValue("uid")
 	token := r.FormValue("token")
 
-	val, ok := USER_TOKEN_MAP.Load(uid)
+	val, ok := WEB_TOKEN_MAP.Load(uid)
 	if !ok || val != token{
 		Reply(w, 401, "验证失败 请重新登录")
 		return

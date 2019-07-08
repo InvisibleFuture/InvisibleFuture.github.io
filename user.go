@@ -6,24 +6,7 @@ import (
 
 
 type User []byte
-func (u User)SetToken() string {
-	token := randSeq(32)
-	USER_TOKEN_MAP.Store(u, token)
-	// 注意还需要重置有c效时间
-	return token
-}
-func (u User)RwToken() string {
-	token := randSeq(32)
-	USER_TOKEN_MAP.Store(u, token)
-	return token
-}
 
-/**
-type User struct {
-	Id string
-	Token string
-}
-**/
 func (u User)Create(target, id string) {
 	//id := <-AUTOID_USER_CH
 	//USER_

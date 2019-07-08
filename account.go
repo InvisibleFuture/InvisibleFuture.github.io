@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"strconv"
 )
 
@@ -8,7 +9,7 @@ type Account []byte
 
 func (a Account)Create(password []byte) ([]byte, bool) {
 	id, err := ACCOUNT_ID_DB.Get(a, nil)
-	if err != nil {
+	if err == nil {
 		return id, false
 	}
 
@@ -28,12 +29,14 @@ func (a Account)Signin(password string) ([]byte, bool) {
 
 	pw, err = ACCOUNT_PW_DB.Get(a, nil)
 	if err != nil || password != string(pw[:]) {
+		log.Println(string(pw[:]))
+		log.Println(string(password))
 		return id, false
 	}
 
 	id, err = ACCOUNT_ID_DB.Get(a, nil)
 	if err != nil {
-		return id, false
+		panic("已匹配账号却未找到ID")
 	}
 
 	return id, true

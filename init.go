@@ -31,8 +31,7 @@ var (
 	AUTOID_USER_CH    chan int64
 	AUTOID_PROJECT_CH chan int64
 
-	USER_TOKEN_MAP    sync.Map
-
+	WEB_TOKEN_MAP     sync.Map
 	WEB_HTML_MAP      sync.Map
 )
 
@@ -47,9 +46,6 @@ func init() {
 
 	ACCOUNT_ID_DB, err = leveldb.OpenFile("../data/account_id", nil)
 	if err != nil { panic("ACCOUNT_ID_DB INIT ERROR") }
-
-	ACCOUNT_PW_DB.Put([]byte("Last"), []byte("dedeff"), nil)
-	ACCOUNT_ID_DB.Put([]byte("Last"), []byte("233"), nil)
 
 	// USER
 	USER_NAME_DB, err = leveldb.OpenFile("../data/user_name", nil)
@@ -111,6 +107,13 @@ func init() {
 	//err = db.Put([]byte("key"), []byte("value"), nil)
 	//err = db.Delete([]byte("key"), nil)
 	//defer USER_DB.Close()
+}
+
+func rwtoken(id string) string {
+	token := randSeq(32)
+	WEB_TOKEN_MAP.Store(id, token)
+	return token
+	// 为 token 设置一个过期时间 计时器
 }
 
 func autoid(name string, c chan int64) {
