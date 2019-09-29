@@ -1,22 +1,73 @@
 package main
 
 import (
-	"os"
-	"log"
-	"time"
+	"encoding/json"
 	"io/ioutil"
+	"log"
+	"net/http"
+	"os"
 	"os/signal"
 	"syscall"
-	"net/http"
-	"encoding/json"
+	"time"
 )
 
-func main(){
+func project(w http.ResponseWriter, r *http.Request) {
+	if r.Method == "POST" {
+		Reply(w, 200, "Get访问某个项目")
+		return
+	}
+
+	// 取得所需数据并验证格式正确性
+	uid := r.FormValue("uid")
+	token := r.FormValue("token")
+	if uid == "" || token == "" {
+		Reply(w, 403, "非法参数")
+		return
+	}
+
+	// 验证身份
+	val, ok := WEB_TOKEN_MAP.Load(uid)
+	if !ok || val != token {
+		Reply(w, 401, "验证失败 请重新登录")
+		return
+	}
+
+	data := make(map[string]string)
+	data["info"] = "asdadas"
+	Echo(w, data)
+	/**
+	var u User
+	if ok := Identity(r, &u); !ok {
+		Reply(w, 401, "请求要求用户的身份认证")
+		return
+	}
+
+	var p Project
+	p.Id = r.FormValue("p")
+	mark, err := p.GetMark()
+	if err != nil {
+		Reply(w, 404, "不存在的项目")
+		return
+	}
+	p.Mark = strings.Fields(string(mark[:]))
+	Echo(w, Project{
+		Id:      p.Id,
+		Name:    "is project new",
+		Time:    0,
+		Item:    "19",
+		Task:    []string{},
+		Mark:    []string{"434433","32321","32323"},
+		Master:  []string{"a64d5a","d46a4d","d46w2a2"},
+		Partner: []string{"d46ad46a4d5","d4w6a4d65"},
+	})
+	**/
+}
+func main() {
 	http.HandleFunc("/", index)
 
 	//http.HandleFunc("/user", user)
 	http.HandleFunc("/home", home)
-	http.HandleFunc("/project", project)
+	//http.HandleFunc("/project", project)
 	http.HandleFunc("/project_create", project_create)
 	http.HandleFunc("/signin", sign_in)
 	http.HandleFunc("/signup", sign_up)
@@ -24,8 +75,43 @@ func main(){
 	http.HandleFunc("/plist", list_project)
 	http.HandleFunc("/delete", Delete)
 
+	http.HandleFunc("/project", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != "POST" {
+			Reply(w, 200, "Get访问某个项目")
+			return
+		}
+		// 取得所需数据并验证格式正确性
+		uid := r.FormValue("uid")
+		token := r.FormValue("token")
+		log.Println(uid, token)
+		//if uid == "" || token == "" {
+		//	Reply(w, 403, "非法参数")
+		//	return
+		//}
+
+		// 认证身份
+		val, ok := WEB_TOKEN_MAP.Load(uid)
+		if !ok || val != token {
+			Reply(w, 401, "验证失败 请重新登录")
+			return
+		}
+		// 操作目标 / 操作权限
+		// 选择操作目标后才知道需要哪些数据
+		switch action {
+		case "create":
+			id := r.FormValue("id")
+			// 读取确认权限? 不是web层的
+			user.CreateProject(id)
+		case "delete":
+		case "rewrite":
+		default:
+		}
+		
+		// 回执
+	})
+
 	s := &http.Server{
-		Addr:           ":80",
+		Addr:           ":8080",
 		Handler:        http.DefaultServeMux,
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
@@ -50,7 +136,8 @@ func main(){
 	// 结束所有数据库连接
 	log.Println("done.")
 }
-func list_project(w http.ResponseWriter, r *http.Request){
+
+func list_project(w http.ResponseWriter, r *http.Request) {
 	list := List{
 		Id: r.FormValue("id"),
 	}
@@ -66,31 +153,37 @@ func list_project(w http.ResponseWriter, r *http.Request){
 	log.Println(data)
 	Echo(w, data)
 }
-func index(w http.ResponseWriter, r *http.Request){
+func index(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path != "/" {
 		Reply(w, 404, "目标资源不存在")
 		return
 	}
 	file, err := os.Open("./html/index.html")
-	if err != nil { log.Fatal(err) }
+	if err != nil {
+		log.Fatal(err)
+	}
 	doc, err := ioutil.ReadAll(file)
-	if err != nil { log.Fatal(err) }
+	if err != nil {
+		log.Fatal(err)
+	}
 	w.Write(doc)
 }
 
 type HomeData struct {
 	Projects []ListProject
 }
-func home(w http.ResponseWriter, r *http.Request){
+
+func home(w http.ResponseWriter, r *http.Request) {
 	// 输入并验证数据 执行 反馈
 
-	l := List{Id:"1"}
+	l := List{Id: "1"}
 	p, err := l.GetProjects()
-	if err != nil {}
+	if err != nil {
+	}
 
-	Echo(w, HomeData{Projects:p})
+	Echo(w, HomeData{Projects: p})
 }
-func Delete(w http.ResponseWriter, r *http.Request){
+func Delete(w http.ResponseWriter, r *http.Request) {
 	// 所有 WEB 操作都是映射到角色对象上
 	if r.Method != "Post" {
 		Reply(w, 403, "必须使用POST方法提交命令")
@@ -98,10 +191,10 @@ func Delete(w http.ResponseWriter, r *http.Request){
 	}
 
 	//取得数据
-	id     := r.FormValue("id")
+	id := r.FormValue("id")
 	target := r.FormValue("target")
-	uid    := r.FormValue("uid")
-	token  := r.FormValue("token")
+	uid := r.FormValue("uid")
+	token := r.FormValue("token")
 
 	if uid == "" || token == "" || target == "" || id == "" {
 		Reply(w, 403, "非法参数")
@@ -133,7 +226,7 @@ func sign_in(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	account  := r.FormValue("account")
+	account := r.FormValue("account")
 	password := r.FormValue("password")
 
 	if l := len(account); l < 4 || l > 32 {
@@ -191,7 +284,7 @@ func sign_up(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	account  := r.FormValue("account")
+	account := r.FormValue("account")
 	password := r.FormValue("password")
 
 	if l := len(account); l < 4 || l > 32 {
@@ -216,6 +309,7 @@ func sign_up(w http.ResponseWriter, r *http.Request) {
 	m := make(map[string]string)
 	m["id"] = id
 	m["token"] = token
+	log.Println(m)
 	Echo(w, m)
 }
 func sign_rw(w http.ResponseWriter, r *http.Request) {
@@ -225,7 +319,7 @@ func sign_rw(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 读取数据
-	id    := r.FormValue("id")
+	id := r.FormValue("id")
 	token := r.FormValue("token")
 	if id == "" || token == "" {
 		Reply(w, 401, "未登录")
@@ -234,7 +328,7 @@ func sign_rw(w http.ResponseWriter, r *http.Request) {
 
 	// 验证身份
 	val, ok := WEB_TOKEN_MAP.Load(id)
-	if !ok || val != token{
+	if !ok || val != token {
 		Reply(w, 401, "验证失败 请重新登录")
 		return
 	}
@@ -280,55 +374,6 @@ func Echo(w http.ResponseWriter, data interface{}) {
 	w.Write(js)
 }
 
-func project(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		Reply(w, 200, "Get访问某个项目")
-		return
-	}
-
-	// 取得所需数据并验证格式正确性
-	uid   := r.FormValue("uid")
-	token := r.FormValue("token")
-	if uid == "" || token == "" {
-		Reply(w, 403,"非法参数")
-	}
-
-	// 验证身份
-	val, ok := WEB_TOKEN_MAP.Load(uid)
-	if !ok || val != token{
-		Reply(w, 401, "验证失败 请重新登录")
-		return
-	}
-
-
-	/**
-	var u User
-	if ok := Identity(r, &u); !ok {
-		Reply(w, 401, "请求要求用户的身份认证")
-		return
-	}
-
-	var p Project
-	p.Id = r.FormValue("p")
-	mark, err := p.GetMark()
-	if err != nil {
-		Reply(w, 404, "不存在的项目")
-		return
-	}
-	p.Mark = strings.Fields(string(mark[:]))
-	Echo(w, Project{
-		Id:      p.Id,
-		Name:    "is project new",
-		Time:    0,
-		Item:    "19",
-		Task:    []string{},
-		Mark:    []string{"434433","32321","32323"},
-		Master:  []string{"a64d5a","d46a4d","d46w2a2"},
-		Partner: []string{"d46ad46a4d5","d4w6a4d65"},
-	})
-	**/
-}
-
 func project_create(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	if r.Method != "POST" {
@@ -336,11 +381,11 @@ func project_create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	uid   := r.FormValue("uid")
+	uid := r.FormValue("uid")
 	token := r.FormValue("token")
 
 	val, ok := WEB_TOKEN_MAP.Load(uid)
-	if !ok || val != token{
+	if !ok || val != token {
 		Reply(w, 401, "验证失败 请重新登录")
 		return
 	}
@@ -365,4 +410,3 @@ func project_create(w http.ResponseWriter, r *http.Request) {
 	Reply(w, 200, "返回结果 pid")
 	// 追加 PID 到 USER表
 }
-

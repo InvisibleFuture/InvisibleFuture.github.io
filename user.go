@@ -4,15 +4,14 @@ import (
 	"bytes"
 )
 
-
 type User []byte
 
-func (u User)Create(target, id string) {
+func (u User) Create(target, id string) {
 	//id := <-AUTOID_USER_CH
 	//USER_
 }
 
-func (u User)Delete(id []byte) bool {
+func (u User) Delete(id []byte) bool {
 	// 验证权限
 	// 操作删除
 	// 回执
@@ -31,17 +30,25 @@ func (u User)Master(id string) bool {
 	}
 	return false
 }**/
+func (u User) ProjectCreate() (int, error) {
+	// 如果角色有权创建 project
+	return Project.Create()
+}
 
-func (u User)ProjectPush(id string) {
+func (u User) ProjectPush(id string) {
 	data, err := USER_PROJECT_DB.Get(u, nil)
-	if err != nil { panic("USER_PROJECT_DB PULL ERROR") }
+	if err != nil {
+		panic("USER_PROJECT_DB PULL ERROR")
+	}
 	//list := strings.Fields(string(data))
 	var buf bytes.Buffer
 	buf.WriteString(string(data))
 	buf.WriteString(" ")
 	buf.WriteString(id)
 	err = USER_PROJECT_DB.Put(u, []byte(buf.String()), nil)
-	if err != nil { panic("USER_PROJECT_DB PUSH ERROR") }
+	if err != nil {
+		panic("USER_PROJECT_DB PUSH ERROR")
+	}
 }
 
 //func (u *User)GetProject() ([]string, error) {
