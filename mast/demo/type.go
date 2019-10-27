@@ -86,6 +86,9 @@ func (u *User) Signout() bool {
 	return true
 }
 
+// SERVER 维持会话的方法为 http ws
+// SERVER 要进行身份验证, 与数据收取
+
 // Signin is user
 func (u *User) Signin(account, password string) bool {
 	// 检测不准为空, 另验证码

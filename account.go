@@ -41,30 +41,3 @@ func (a Account)Signin(password string) ([]byte, bool) {
 
 	return id, true
 }
-
-
-
-
-
-/**
-type Account struct {
-	Account  string
-	Password string
-}
-
-func (a *Account)Create(id string) {
-	var err error
-	err = ACCOUNT_PW_DB.Put([]byte(a.Account), []byte(a.Password), nil)
-	if err != nil { panic("ACCOUNT_PW_DB CREATE ERROR") }
-	err = ACCOUNT_ID_DB.Put([]byte(a.Account), []byte(id), nil)
-	if err != nil { panic("ACCOUNT_ID_DB CREATE ERROR") }
-}
-
-func (a Account)GetPassword() ([]byte, error) {
-	return ACCOUNT_PW_DB.Get([]byte(a.Account), nil)
-}
-func (a Account)GetId() ([]byte, error) {
-	return ACCOUNT_ID_DB.Get([]byte(a.Account), nil)
-}
-**/
-
