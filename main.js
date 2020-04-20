@@ -36,4 +36,5 @@ function ListView(state) {
 	state.children && state.children.forEach(item => {
 		listview.appendChild(item);
 	})
+	return listview
 }
