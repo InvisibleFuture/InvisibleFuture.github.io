@@ -13,7 +13,7 @@ fetch('/main.json', {
 
 
 document.body.appendChild(ListView({
-	appendChild: [
+	children: [
 		Note({text: '奇怪的物, 落在生中的东西'}),
 		Note({text: '在对代码渲染中, 代码是作为一个文件片段/对象存在的,它应有单独的操纵方法'}),
 		Note({text: '任何对象都应具备可操作的选项, 而非仅仅展示. 明确展现目的和下一步会做的事情, 让事物变得可控 对一句话的回应/删除/涂改/赞许, 对一个角色对象的关注/屏蔽'}),
