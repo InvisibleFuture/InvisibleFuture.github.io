@@ -24,15 +24,15 @@ document.body.appendChild(ListView({
 
 function Note(state) {
 	let note = document.createElement('div');
-	div.style.cssText = state.style;
+	note.style.cssText = state.style;
 	note.innerText = state.text;
 	return note;
 }
 
 function ListView(state) {
 	let listview = document.createElement('div');
-	if(state.style) div.style.cssText = state.style;
-	if(state.class) div.className = div.class;
+	if(state.style) listview.style.cssText = state.style;
+	if(state.class) listview.className = state.class;
 	state.children && state.children.forEach(item => {
 		listview.appendChild(item);
 	})
