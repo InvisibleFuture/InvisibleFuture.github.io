@@ -1,0 +1,30 @@
+{
+  "dependencies": {
+    "webpack-dev-server": "^3.11.0"
+  },
+  "name": "awsl",
+  "description": "~~",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "devDependencies": {
+    "style-loader": "^1.2.1",
+    "webpack": "^4.30.0",
+    "webpack-cli": "^3.3.12"
+  },
+  "scripts": {
+    "build": "webpack",
+    "dev": "webpack-dev-server --devtool eval --progress --colors --hot --content-base build",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/InvisibleFuture/awsl.git"
+  },
+  "author": "satori.love",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/InvisibleFuture/awsl/issues"
+  },
+  "homepage": "https://github.com/InvisibleFuture/awsl#readme"
+}
