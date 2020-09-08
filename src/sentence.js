@@ -12,8 +12,9 @@ class sentence {
     constructor(data) {
         this.element = document.createElement("div")
         this.element.style.cssText = `
-            width: 480px;
-            margin: 16px;
+            width: 100%;
+            max-width: 600px;
+            margin: 16px auto;
             padding: 16px;
             border: thin solid rgba(0,0,0,.12);
         `

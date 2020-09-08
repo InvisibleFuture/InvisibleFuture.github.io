@@ -1,6 +1,14 @@
 import sentence from "./sentence.js"
 import images from "./images.js"
 
+let h2 = document.createElement("h2")
+h2.innerHTML = "始めましょう~"
+h2.style.cssText = `
+    width: 100%;
+    max-width: 600px;
+    margin: 16px auto;
+`
+
 let se = new sentence([
     "一种界面交互体验, 对象不是附属于视域的在展现中始终暗示对象的可预测大小, 在无限大且无边界的对象展现中, 应始终充满/超出视域",
     "清除不必要的对象, 在任何为重点/集中展现的场景. 目的对象本身以外对象主体不应超过2个, 薄弱的逻辑思考能力会对此倍感压力, 以及非重点的心理暗示. 并且也是为在计算原理上更快命中目标",
@@ -14,5 +22,7 @@ let im = new images([
     "https://www.satori.love/satori.jpeg"
 ])
 
+document.body.appendChild(h2)
 document.body.appendChild(se.element)
 document.body.appendChild(im.element)
+
