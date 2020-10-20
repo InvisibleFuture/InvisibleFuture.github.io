@@ -25,18 +25,12 @@ export default class {
     }
     hide() {
         this.element.classList.remove('show')
-        // 折叠元素
-        // 压缩元素
-        // 模糊元素
-        // 隐藏元素
-        // 聚点元素
     }
     new_child(list) {
         let div = document.createElement('div')
         list.forEach(item => div.appendChild(item))
         this.element.appendChild(div)
     }
-    // 向 <head> 写入 <style> 并防止重复
     style(id, content) {
         let styles = document.head.getElementsByTagName("style")
         for (let i = styles.length; i--; i > 0) {

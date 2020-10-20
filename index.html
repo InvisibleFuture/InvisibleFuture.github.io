@@ -25,28 +25,234 @@
 		border-radius: .25em;
 		font-family: "Quicksand", "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, Helvetica Neue, PingFang SC, Microsoft YaHei, Source Han Sans SC, Noto Sans CJK SC, WenQuanYi Micro Hei, sans-serif;
 	}
-
-	.text {
-		background: #ff1414;
-		max-width: 14em;
-	}
 </style>
+<div style="display: none;"></div>
+<script type="module">
+	function Text(data) {
+		let element = document.createElement('div')
+		element.innerHTML = data
+		return element
+	}
+	function Date(data) {
+		let element = document.createElement('div')
+		element.innerHTML = data
+		return element
+	}
+	function Image(data) {
+		let element = document.createElement('div')
+		element.innerHTML = data
+		return element
+	}
+	class Tabs {
+		constructor(list = [], active = 0) {
+			this.style('style_tabs', `
+        		    .tabs {
+                        font-size: 14px;
+                        margin: 2em 5em;
+        		        display: flex;
+        		        align-items: flex-end;
+        		        justify-content: flex-end;
+        		        user-select:none;
+        		    }
+        		    .tabs div {
+        		        cursor: pointer;
+        		        padding: 0 .8em;
+        		        height: 2em;
+        		        line-height: 2em;
+        		        border-radius: .25em;
+        		        transition: all .75s;
+        		    }
+        		    .tabs div:hover {
+        		        color: #32c787;
+        		    }
+        		    .tabs .active {
+        		        color: #32c787;
+        		        font-size: 1.5em;
+        		        font-weight: 600;
+        		    }
+        		`)
+			// 主元素赋予 classname
+			this.element = document.createElement('div')
+			this.element.className = 'tabs'
 
-<body>
-	<script type="module" src="src/index.js"></script>
-	<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-	<script>
-		fetch('/build/idea.md').then(Response => Response.text()).then(data => {
-			document.querySelector('.markdown_idea').innerHTML = marked(data)
-		})
-		fetch('/build/project.md').then(Response => Response.text()).then(data => {
-			document.querySelector('.markdown_project').innerHTML = marked(data)
-		})
-		fetch('/build/task.md').then(Response => Response.text()).then(data => {
-			document.querySelector('.markdown_task').innerHTML = marked(data)
-		})
-		fetch('/build/store.md').then(Response => Response.text()).then(data => {
-			document.querySelector('.markdown_store').innerHTML = marked(data)
-		})
-	</script>
-</body>
+
+			// 外部调用选中目标
+			this.active = active
+			// 追加子元素
+			list.forEach((item, i) => {
+				let div = document.createElement('div')
+				div.innerHTML = item.name
+				div.onclick = () => {
+					item.show()
+					div.classList.add('active')
+					if (this.active_element && this.active_item && this.active_element != div) {
+						this.active_element.classList.remove('active')
+						this.active_item.hide()
+					}
+					this.active_item = item
+					this.active_element = div
+				}
+				if (i === this.active) {
+					this.active_item = item
+					this.active_element = div
+					this.active_element.classList.add('active')
+					item.show()
+				}
+				this.element.appendChild(div)
+			})
+		}
+		// 向 <head> 写入 <style> 并防止重复
+		style(id, content) {
+			let styles = document.head.getElementsByTagName("style")
+			for (let i = styles.length; i--; i > 0) {
+				if (styles[i].id === id) return
+			}
+			let style = document.createElement('style')
+			style.innerHTML = content
+			style.id = id
+			document.head.appendChild(style)
+		}
+	}
+	class Project {
+		constructor(list = []) {
+			this.style('style_project', `
+        		    .project {
+        		        display: none;
+        		        transition: all .75s;
+        		    }
+        		    .project.show {
+        		        display: block;
+        		        max-width: 800px;
+        		        margin: 1em auto;
+        		        padding: 1em;
+        		    }
+        		    .project>div {
+        		        margin:2em 1em;
+        		    }
+        		    /** markdown css **/
+        		    .project p {
+        		        margin: 2em 1em;
+        		    }
+        		`)
+			this.element = document.createElement('div')
+			this.element.className = 'project'
+			this.hide()
+			list.forEach(item => this.new_child(item))
+		}
+		show() {
+			this.element.classList.add('show')
+		}
+		hide() {
+			this.element.classList.remove('show')
+		}
+		new_child(item) {
+			let div = document.createElement('div')
+			div.innerHTML = item
+			this.element.appendChild(div)
+		}
+		style(id, content) {
+			let styles = document.head.getElementsByTagName("style")
+			for (let i = styles.length; i--; i > 0) {
+				if (styles[i].id === id) return
+			}
+			let style = document.createElement('style')
+			style.innerHTML = content
+			style.id = id
+			document.head.appendChild(style)
+		}
+	}
+	class Idea {
+		constructor(list = []) {
+			this.element = document.createElement('div')
+			this.element.className = 'idea'
+			this.hide()
+			list.forEach(item => this.new_child(item))
+			this.style('style_idea', `
+                .idea {
+                    display: none;
+                    transition: all .75s;
+                }
+                .idea.show {
+                    display: block;
+                    max-width: 800px;
+                    margin: 1em auto;
+                    padding: 1em;
+                }
+                .idea>div {
+                    margin:2em 1em;
+                }
+            `)
+		}
+		show() {
+			this.element.classList.add('show')
+		}
+		hide() {
+			this.element.classList.remove('show')
+		}
+		new_child(list) {
+			let div = document.createElement('div')
+			list.forEach(item => div.appendChild(item))
+			this.element.appendChild(div)
+		}
+		style(id, content) {
+			let styles = document.head.getElementsByTagName("style")
+			for (let i = styles.length; i--; i > 0) {
+				if (styles[i].id === id) return
+			}
+			let style = document.createElement('style')
+			style.innerHTML = content
+			style.id = id
+			document.head.appendChild(style)
+		}
+	}
+
+
+	let idea = new Idea([
+		[
+			Text("在对代码渲染中, 代码是作为一个文件片段/对象存在的, 它应有单独的操纵方法"),
+			Text("任何对象都应具备可操作的选项, 而非仅仅展示. 明确展现目的和下一步会做的事情, 让事物变得可控 对一句话的回应/删除/涂改/赞许, 对一个角色对象的关注/屏蔽"),
+			Text("清除不必要的对象, 在任何为重点/集中展现的场景. 目的对象本身以外对象主体不应超过2个, 薄弱的逻辑思考能力会对此倍感压力, 以及非重点的心理暗示. 并且也是为在计算原理上更快命中目标"),
+			Text("一种界面交互体验,对象不是附属于视域的在展现中始终暗示对象的可预测大小,在无限大且无边界的对象展现中, 应始终充满/超出视域"),
+			Text(""),
+		]
+	])
+	let project = new Idea([
+		[
+			Text("# Project this project.."),
+		]
+	])
+	let task = new Idea([
+		[
+			Text("# 色彩"),
+			Text("当试图表现一个标准色时, 使用它的低亮度色和高光色来表现质感"),
+			Text(""),
+			Text(""),
+			Text(""),
+			Text(""),
+		]
+	])
+	let store = new Idea([
+		[
+			Text("妹は、世界で最もかわいいです"),
+			Text("奇怪的物, 落在生中的东西")
+		]
+
+	])
+
+	idea.element.classList.add('markdown_idea')
+	project.element.classList.add('markdown_project')
+	task.element.classList.add('markdown_task')
+	store.element.classList.add('markdown_store')
+
+	document.body.appendChild(new Tabs([
+		{ name: 'Idea', show: idea.show.bind(idea), hide: idea.hide.bind(idea) },
+		{ name: 'Project', show: project.show.bind(project), hide: project.hide.bind(project) },
+		{ name: 'Task', show: task.show.bind(task), hide: task.hide.bind(task) },
+		{ name: 'Store', show: store.show.bind(store), hide: store.hide.bind(store) },
+	], 0).element)
+
+	document.body.appendChild(idea.element)
+	document.body.appendChild(project.element)
+	document.body.appendChild(task.element)
+	document.body.appendChild(store.element)
+</script>
