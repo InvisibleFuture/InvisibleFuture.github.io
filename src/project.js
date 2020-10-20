@@ -14,6 +14,10 @@ export default class {
             .project>div {
                 margin:2em 1em;
             }
+            /** markdown css **/
+            .project p {
+                margin: 2em 1em;
+            }
         `)
         this.element = document.createElement('div')
         this.element.className = 'project'
