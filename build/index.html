@@ -32,8 +32,17 @@
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
         window.onload = function () {
+            fetch('/idea.md').then(Response => Response.text()).then(data => {
+                document.querySelector('.markdown_idea').innerHTML = marked(data)
+            })
+            fetch('/project.md').then(Response => Response.text()).then(data => {
+                document.querySelector('.markdown_project').innerHTML = marked(data)
+            })
             fetch('/task.md').then(Response => Response.text()).then(data => {
                 document.querySelector('.markdown_task').innerHTML = marked(data)
+            })
+            fetch('/store.md').then(Response => Response.text()).then(data => {
+                document.querySelector('.markdown_store').innerHTML = marked(data)
             })
         }
     </script>
