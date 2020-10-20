@@ -2,11 +2,6 @@ import Tabs from "./tabs.js"
 import Idea from './idea.js'
 import Project from './project.js'
 
-import marked from "./marked.min.js"
-
-let xs = marked('233')
-console.log(xs)
-
 
 let idea = new Idea([
     [
