@@ -14,7 +14,7 @@
 **/
 export default class {
     constructor(list = [], active = 0) {
-        this.style('tabs', `
+        this.style('style_tabs', `
             .tabs {
                 display: flex;
                 align-items: flex-end;

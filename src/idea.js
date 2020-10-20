@@ -1,12 +1,10 @@
 export default class {
     constructor(list = []) {
-        //this.style('ideax', ``)
-
         this.element = document.createElement('div')
         this.element.className = 'idea'
         this.hide()
         list.forEach(item => this.new_child(item))
-        this.xstyle('idea', `
+        this.style('style_idea', `
             .idea {
                 display: none;
                 transition: all .75s;
@@ -39,7 +37,7 @@ export default class {
         this.element.appendChild(div)
     }
     // 向 <head> 写入 <style> 并防止重复
-    xstyle(id, content) {
+    style(id, content) {
         let styles = document.head.getElementsByTagName("style")
         for (let i = styles.length; i--; i > 0) {
             if (styles[i].id === id) return
